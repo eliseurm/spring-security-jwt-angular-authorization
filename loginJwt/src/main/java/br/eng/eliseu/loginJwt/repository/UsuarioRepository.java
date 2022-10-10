@@ -1,12 +1,15 @@
 package br.eng.eliseu.loginJwt.repository;
 
-import br.eng.eliseu.loginJwt.model.UsuarioModel;
+import br.eng.eliseu.loginJwt.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-public interface UsuarioRepository extends JpaRepository<UsuarioModel, Integer> {
+@Repository
+public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
 
-    public Optional<UsuarioModel> findByLogin(String login);
-
+    Optional<Usuario> findByNome(String nome);
+    Boolean existsByNome(String nome);
+    Boolean existsByEmail(String email);
 }

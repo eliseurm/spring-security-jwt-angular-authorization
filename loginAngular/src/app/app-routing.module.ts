@@ -6,6 +6,7 @@ import { HomeComponent } from './pages/home/home.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { TasksComponent } from './pages/tasks/tasks.component';
 import { DxDataGridModule, DxFormModule } from 'devextreme-angular';
+import {TestePageComponent} from "./pages/teste-page/teste-page.component";
 
 const routes: Routes = [
   {
@@ -22,6 +23,10 @@ const routes: Routes = [
     path: 'home',
     component: HomeComponent,
     canActivate: [ AuthGuardService ]
+  },
+  {
+    path: 'testes',
+    component: TestePageComponent
   },
   {
     path: 'login-form',

@@ -8,10 +8,13 @@ import { AuthService, ScreenService, AppInfoService } from './shared/services';
 import { UnauthenticatedContentModule } from './unauthenticated-content';
 import { AppRoutingModule } from './app-routing.module';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
+import { TestePageComponent } from './pages/teste-page/teste-page.component';
+import {DxButtonModule, DxDataGridModule} from "devextreme-angular";
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
+    TestePageComponent
   ],
   imports: [
     BrowserModule,
@@ -25,7 +28,9 @@ import {HttpClient, HttpClientModule} from "@angular/common/http";
     LoginFormModule,
     UnauthenticatedContentModule,
     AppRoutingModule,
-    HttpClientModule
+    HttpClientModule,
+    DxDataGridModule,
+    DxButtonModule
   ],
   providers: [
     AuthService,
