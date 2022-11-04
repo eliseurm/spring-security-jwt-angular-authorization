@@ -27,9 +27,7 @@ export class LoginFormComponent {
     if (!result.isOk) {
       notify(result.message, 'error', 2000);
     }
-    setTimeout( () => {
     this.loading = false;
-    }, 3000);
   }
 
   onCreateAccountClick = () => {
