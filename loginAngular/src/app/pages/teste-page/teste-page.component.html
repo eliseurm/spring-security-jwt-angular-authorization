@@ -3,7 +3,7 @@
 <dx-data-grid [dataSource]="testes">
   <dxo-toolbar>
     <dxi-item>
-      <dx-button text="botao">
+      <dx-button text="botao" (onClick)="onClickButton($event)">
       </dx-button>
     </dxi-item>
   </dxo-toolbar>

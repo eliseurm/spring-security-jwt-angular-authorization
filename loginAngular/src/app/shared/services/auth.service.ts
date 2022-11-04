@@ -1,24 +1,29 @@
 import {Injectable} from '@angular/core';
 import {ActivatedRouteSnapshot, CanActivate, Router} from '@angular/router';
 import {IUser} from "../data/IUser";
-import {HttpClient, HttpEvent, HttpHandler, HttpHeaders, HttpInterceptor, HttpRequest, HttpResponse} from "@angular/common/http";
-import {firstValueFrom, map, Observable} from "rxjs";
+import {HttpClient} from "@angular/common/http";
+import {firstValueFrom} from "rxjs";
+import {IJwtResponse} from "../data/IJwtResponse";
 
 const defaultPath = '/';
 const defaultUser = {
-  email: 'sandra@example.com',
+  token: '',
+  email: 'admin',
   avatarUrl: 'https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png'
 };
 
 @Injectable()
 export class AuthService {
-  private _user: IUser | null = defaultUser;
+
+  private _user: IUser | null = null;
+  private url = "http://localhost:8080";
 
   get loggedIn(): boolean {
     return !!this._user;
   }
 
   private _lastAuthenticatedPath: string = defaultPath;
+
   set lastAuthenticatedPath(value: string) {
     this._lastAuthenticatedPath = value;
   }
@@ -30,14 +35,19 @@ export class AuthService {
 
   async logIn(email: string, password: string) {
     // let headers = new HttpHeaders().set('Content-Type', 'application/json');
-    let data = {login: email, password: password};
+    let data = {nome: email, senha: password};
 
     try {
       // Send request
-      const data$ = this.http.post('/api/login', data);
-      const value = await firstValueFrom(data$);
+      let data$ = this.http.post<IJwtResponse>(this.url+'/api/auth/login', data);
+      let value = await firstValueFrom(data$);
 
-      // this._user?.token = value.;
+      this._user = new class implements IUser {
+        avatarUrl: string = value.token;
+        email: string = value.usuario;
+        token: string = "https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png";
+      }
+
       this.router.navigate([this._lastAuthenticatedPath]);
 
       return {
@@ -53,8 +63,13 @@ export class AuthService {
   }
 
   async getUser() {
+
     try {
       // Send request
+      // vai buscar o usuario que esta no cookie
+      // AQUI: descobrir porque o angular nao esta enviando o cookie
+      let data$ = this.http.get<IUser>(this.url+'/api/usuario');
+      this._user = await firstValueFrom(data$);
 
       return {
         isOk: true,
@@ -68,10 +83,13 @@ export class AuthService {
     }
   }
 
-  async createAccount(email: string, password: string) {
+  async createAccount(name: string, email: string, password: string) {
     try {
       // Send request
       console.log(email, password);
+      let data = {nome: name, email: email, senha: password};
+      let data$ = this.http.post<IJwtResponse>('/api/auth/save', data);
+      let value = await firstValueFrom(data$);
 
       this.router.navigate(['/create-account']);
       return {
@@ -119,6 +137,10 @@ export class AuthService {
   }
 
   async logOut() {
+
+    let data$ = this.http.post<any>(this.url+'/api/auth/logout', {});
+    let value = await firstValueFrom(data$);
+
     this._user = null;
     this.router.navigate(['/login-form']);
   }

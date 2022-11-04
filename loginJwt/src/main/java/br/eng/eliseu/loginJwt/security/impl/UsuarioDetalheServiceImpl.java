@@ -1,6 +1,5 @@
-package br.eng.eliseu.loginJwt.service;
+package br.eng.eliseu.loginJwt.security.impl;
 
-import br.eng.eliseu.loginJwt.security.UsuarioDetalheImpl;
 import br.eng.eliseu.loginJwt.model.Usuario;
 import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,8 +8,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Optional;
 
 /**

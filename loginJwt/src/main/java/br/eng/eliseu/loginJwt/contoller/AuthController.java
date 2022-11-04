@@ -3,15 +3,17 @@ package br.eng.eliseu.loginJwt.contoller;
 import br.eng.eliseu.loginJwt.model.Papel;
 import br.eng.eliseu.loginJwt.model.PapelEnum;
 import br.eng.eliseu.loginJwt.model.Usuario;
-import br.eng.eliseu.loginJwt.repository.PapelRepository;
-import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
-import br.eng.eliseu.loginJwt.security.UsuarioDetalheImpl;
 import br.eng.eliseu.loginJwt.model.vo.JwtResponse;
 import br.eng.eliseu.loginJwt.model.vo.LoginRequestVO;
+import br.eng.eliseu.loginJwt.model.vo.MessageResponse;
 import br.eng.eliseu.loginJwt.model.vo.SaveRequestVO;
-import br.eng.eliseu.loginJwt.utils.JwtUtil;
+import br.eng.eliseu.loginJwt.repository.PapelRepository;
+import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
+import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheImpl;
+import br.eng.eliseu.loginJwt.security.jwt.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,13 +22,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.persistence.Transient;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+//@CrossOrigin(origins = "http://localhost:4200", maxAge = 3600, allowCredentials = "true")
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
@@ -49,23 +51,44 @@ public class AuthController {
      * Autentica um usuario
      */
     @PostMapping("/login")
-    public ResponseEntity<?> autoriza(@RequestBody LoginRequestVO loginRequestVO) {
+    public ResponseEntity<JwtResponse> autoriza(@RequestBody LoginRequestVO loginRequestVO) {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestVO.getNome(), loginRequestVO.getSenha()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtil.generateJwtToken(authentication);
 
         UsuarioDetalheImpl userDetails = (UsuarioDetalheImpl) authentication.getPrincipal();
+
+        // Gera token jwt a partir das informacoes do usuario autorizado
+        // comentei porque no metodo que gera o cookie tbm gera o token com este mesmo metodo
+//        String jwt = jwtUtil.generateJwtToken(userDetails);
+
+        // Monto uma lista com as autorizacoes do usuario autenticado
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
+        // Monto o cookie que vai ser passado para o navegador
+        ResponseCookie jwtCookie = jwtUtil.generateJwtCookie(userDetails);
+
+        // Carrego a classe que vai ser usada para retornar as informacoes do login
         JwtResponse res = new JwtResponse();
-        res.setToken(jwt);
+//        res.setToken(jwtCookie.getValue());
         res.setId(userDetails.getId());
         res.setUsuario(userDetails.getUsername());
         res.setPapeis(roles);
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok()
+//                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .body(res)
+                ;
+//        return ResponseEntity.ok(res);
 //        return ResponseEntity.ok("Ok");
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser() {
+        ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
+        return ResponseEntity.ok()
+//                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new MessageResponse("Você esta fora!"));
     }
 
     @PostMapping("/save")

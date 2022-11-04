@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import {IUser} from "../../shared/data/IUser";
+import {AuthService} from "../../shared/services";
 
 @Component({
   selector: 'app-teste-page',
@@ -10,9 +11,14 @@ export class TestePageComponent implements OnInit {
 
   testes: IUser[] = [];
 
-  constructor() { }
+  constructor(private authService: AuthService) { }
 
   ngOnInit(): void {
+  }
+
+  async onClickButton(event: any) {
+      let ret = await this.authService.logIn("admin", "1234");
+      console.log(ret);
   }
 
 }

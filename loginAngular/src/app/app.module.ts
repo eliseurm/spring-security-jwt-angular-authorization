@@ -10,6 +10,7 @@ import { AppRoutingModule } from './app-routing.module';
 import {HttpClient, HttpClientModule} from "@angular/common/http";
 import { TestePageComponent } from './pages/teste-page/teste-page.component';
 import {DxButtonModule, DxDataGridModule} from "devextreme-angular";
+import {httpInterceptorProviders, HttpRequestInterceptor} from "./shared/helps/http-request.interceptor";
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import {DxButtonModule, DxDataGridModule} from "devextreme-angular";
     AuthService,
     ScreenService,
     AppInfoService,
-    HttpClient
+    HttpClient,
+    httpInterceptorProviders
   ],
   bootstrap: [AppComponent]
 })

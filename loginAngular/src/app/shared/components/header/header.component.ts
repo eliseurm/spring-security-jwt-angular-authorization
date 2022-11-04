@@ -24,7 +24,11 @@ export class HeaderComponent implements OnInit {
   @Input()
   title!: string;
 
-  user: IUser | null = { email: '' };
+  user: IUser | null = new class implements IUser {
+    avatarUrl: string = "";
+    email: string = "";
+    token: string = "";
+  };
 
   userMenuItems = [{
     text: 'Profile',
@@ -41,10 +45,15 @@ export class HeaderComponent implements OnInit {
     }
   }];
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService,
+              private router: Router) {
+
+  }
 
   ngOnInit() {
-    this.authService.getUser().then((e) => this.user = e.data);
+    this.authService.getUser().then((e) => {
+      this.user = e.data;
+    });
   }
 
   toggleMenu = () => {

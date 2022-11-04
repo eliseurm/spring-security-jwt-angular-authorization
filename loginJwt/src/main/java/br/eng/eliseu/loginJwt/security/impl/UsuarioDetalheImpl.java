@@ -1,4 +1,4 @@
-package br.eng.eliseu.loginJwt.security;
+package br.eng.eliseu.loginJwt.security.impl;
 
 import br.eng.eliseu.loginJwt.model.Papel;
 import br.eng.eliseu.loginJwt.model.Usuario;
@@ -6,10 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +48,16 @@ public class UsuarioDetalheImpl implements UserDetails {
         Set<Papel> papeis = autorizacoes.stream()
                 .map(papel -> new Papel(null, papel.getAuthority()))
                 .collect(Collectors.toSet());
+        return papeis;
+    }
+
+    public Set<GrantedAuthority> getUsuarioPapel() {
+        Set<GrantedAuthority> papeis = new HashSet<>();
+
+        usuario.get().getPapeis().stream()
+                .map(papel -> papel.getPapel())
+                .collect(Collectors.toSet());
+
         return papeis;
     }
 

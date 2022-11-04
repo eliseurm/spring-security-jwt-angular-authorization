@@ -1,4 +1,4 @@
-package br.eng.eliseu.loginJwt.service;
+package br.eng.eliseu.loginJwt.security.impl;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 
 @Component
-public class AuthEntryPointJwt implements AuthenticationEntryPoint {
+public class AuthEntryPointImpl implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {

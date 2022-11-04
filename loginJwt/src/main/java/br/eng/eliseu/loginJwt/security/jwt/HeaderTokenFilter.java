@@ -1,7 +1,8 @@
-package br.eng.eliseu.loginJwt.security;
+package br.eng.eliseu.loginJwt.security.jwt;
 
-import br.eng.eliseu.loginJwt.service.UsuarioDetalheServiceImpl;
-import br.eng.eliseu.loginJwt.utils.JwtUtil;
+import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @Component
-public class AuthTokenFilter extends OncePerRequestFilter {
+public class HeaderTokenFilter extends OncePerRequestFilter {
 
 
     @Autowired
@@ -27,11 +28,11 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     @Autowired
     private UsuarioDetalheServiceImpl userDetailsService;
 
-    public AuthTokenFilter() {
-    }
+    private static final Logger logger = LoggerFactory.getLogger(CookieTokenFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+
         try {
             String jwt = parseJwt(request);
             if (jwt != null && jwtUtil.validateJwtToken(jwt)) {
@@ -42,7 +43,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            System.out.print(e.getMessage());
+            logger.error("Cannot set user authentication: {}", e);
         }
         filterChain.doFilter(request, response);
     }
