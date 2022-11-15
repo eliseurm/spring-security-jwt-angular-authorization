@@ -1,5 +1,6 @@
 package br.eng.eliseu.loginJwt.contoller;
 
+import br.eng.eliseu.loginJwt.LoginJwtApplication;
 import br.eng.eliseu.loginJwt.model.Papel;
 import br.eng.eliseu.loginJwt.model.PapelEnum;
 import br.eng.eliseu.loginJwt.model.Usuario;
@@ -9,9 +10,13 @@ import br.eng.eliseu.loginJwt.model.vo.MessageResponse;
 import br.eng.eliseu.loginJwt.model.vo.SaveRequestVO;
 import br.eng.eliseu.loginJwt.repository.PapelRepository;
 import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
+import br.eng.eliseu.loginJwt.security.impl.AuthEntryPointImpl;
 import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheImpl;
 import br.eng.eliseu.loginJwt.security.jwt.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +35,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    private static final Logger logger = LoggerFactory.getLogger(LoginJwtApplication.class);
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -52,7 +59,9 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> autoriza(@RequestBody LoginRequestVO loginRequestVO) {
+
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestVO.getNome(), loginRequestVO.getSenha()));
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         UsuarioDetalheImpl userDetails = (UsuarioDetalheImpl) authentication.getPrincipal();
@@ -66,6 +75,8 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
+        logger.info("Usuario: {}, papel: {}", userDetails.getUsername(), roles);
+
         // Monto o cookie que vai ser passado para o navegador
         ResponseCookie jwtCookie = jwtUtil.generateJwtCookie(userDetails);
 
@@ -75,8 +86,9 @@ public class AuthController {
         res.setId(userDetails.getId());
         res.setUsuario(userDetails.getUsername());
         res.setPapeis(roles);
+
         return ResponseEntity.ok()
-//                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .body(res)
                 ;
 //        return ResponseEntity.ok(res);
@@ -87,7 +99,7 @@ public class AuthController {
     public ResponseEntity<?> logoutUser() {
         ResponseCookie cookie = jwtUtil.getCleanJwtCookie();
         return ResponseEntity.ok()
-//                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(new MessageResponse("Você esta fora!"));
     }
 

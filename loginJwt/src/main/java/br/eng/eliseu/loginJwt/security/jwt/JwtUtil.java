@@ -2,34 +2,45 @@ package br.eng.eliseu.loginJwt.security.jwt;
 
 import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheImpl;
 import io.jsonwebtoken.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtUtil {
+
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
     @Value("${fullstackbook.app.jwtSecret}")
     private String jwtSecret;
 
     @Value("${fullstackbook.app.jwtExpirationMs}")
-    private int jwtExpirationMs;
+    private int jwtExpirationms;
 
-    @Value("jwtToken")
+    @Value("${fullstackbook.app.jwtCookieName}")
     private String jwtCookieName;
 
     public String generateJwtToken(UsuarioDetalheImpl userPrincipal) {
 
+        String authorities = userPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationms))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
+                .claim("authorities", authorities)
                 .compact();
 
     }
@@ -39,7 +50,7 @@ public class JwtUtil {
         ResponseCookie cookie = ResponseCookie
                 .from(jwtCookieName, jwt)
                 .path("/api")
-                .maxAge(3600)
+                .maxAge(3600) // 1h
                 .secure(true)
                 .httpOnly(true)
                 .build();
@@ -57,15 +68,15 @@ public class JwtUtil {
             Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(authToken);
             return true;
         } catch (SignatureException e) {
-            System.out.print(e.getMessage());
+            logger.error("Assinatura JWT inválida: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            System.out.print(e.getMessage());
+            logger.error("Token JWT inválido: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
-            System.out.print(e.getMessage());
+            logger.error("O token JWT expirou: {}", e.getMessage());
         } catch (UnsupportedJwtException e) {
-            System.out.print(e.getMessage());
+            logger.error("O token JWT não é compatível: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
-            System.out.print(e.getMessage());
+            logger.error("A string de declarações (claims) JWT está vazia: {}", e.getMessage());
         }
         return false;
     }

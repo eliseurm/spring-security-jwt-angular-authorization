@@ -1,37 +1,43 @@
-import {Injectable} from '@angular/core';
-import {ActivatedRouteSnapshot, CanActivate, Router} from '@angular/router';
+import {Injectable, OnInit} from '@angular/core';
+import {Router} from '@angular/router';
 import {IUser} from "../data/IUser";
 import {HttpClient} from "@angular/common/http";
 import {firstValueFrom} from "rxjs";
 import {IJwtResponse} from "../data/IJwtResponse";
 
-const defaultPath = '/';
-const defaultUser = {
-  token: '',
-  email: 'admin',
-  avatarUrl: 'https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png'
-};
+// const defaultUser = {
+//   token: '',
+//   email: 'admin',
+//   avatarUrl: 'https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png'
+// };
 
 @Injectable()
 export class AuthService {
 
   private _user: IUser | null = null;
-  private url = "http://localhost:8080";
+  private _defaultPath = '/';
+  private _lastAuthenticatedPath: string = this._defaultPath;
+  private _url = "http://localhost:8080";
+
+
+  get defaultPath(): string{
+    return this._defaultPath;
+  }
 
   get loggedIn(): boolean {
     return !!this._user;
   }
-
-  private _lastAuthenticatedPath: string = defaultPath;
 
   set lastAuthenticatedPath(value: string) {
     this._lastAuthenticatedPath = value;
   }
 
   constructor(private router: Router,
+              // private authService: AuthService,
               private http: HttpClient) {
 
   }
+
 
   async logIn(email: string, password: string) {
     // let headers = new HttpHeaders().set('Content-Type', 'application/json');
@@ -39,7 +45,7 @@ export class AuthService {
 
     try {
       // Send request
-      let data$ = this.http.post<IJwtResponse>(this.url+'/api/auth/login', data);
+      let data$ = this.http.post<IJwtResponse>(this._url+'/api/auth/login', data);
       let value = await firstValueFrom(data$);
 
       this._user = new class implements IUser {
@@ -67,8 +73,7 @@ export class AuthService {
     try {
       // Send request
       // vai buscar o usuario que esta no cookie
-      // AQUI: descobrir porque o angular nao esta enviando o cookie
-      let data$ = this.http.get<IUser>(this.url+'/api/usuario');
+      let data$ = this.http.get<IUser>(this._url+'/api/usuario');
       this._user = await firstValueFrom(data$);
 
       return {
@@ -138,45 +143,12 @@ export class AuthService {
 
   async logOut() {
 
-    let data$ = this.http.post<any>(this.url+'/api/auth/logout', {});
+    let data$ = this.http.post<any>(this._url+'/api/auth/logout', {});
     let value = await firstValueFrom(data$);
 
     this._user = null;
     this.router.navigate(['/login-form']);
   }
-}
-
-@Injectable()
-export class AuthGuardService implements CanActivate {
-  constructor(private router: Router, private authService: AuthService) {
-  }
-
-  canActivate(route: ActivatedRouteSnapshot): boolean {
-    const isLoggedIn = this.authService.loggedIn;
-    const isAuthForm = [
-      'login-form',
-      'reset-password',
-      'create-account',
-      'change-password/:recoveryCode'
-    ].includes(route.routeConfig?.path || defaultPath);
-
-    if (isLoggedIn && isAuthForm) {
-      this.authService.lastAuthenticatedPath = defaultPath;
-      this.router.navigate([defaultPath]);
-      return false;
-    }
-
-    if (!isLoggedIn && !isAuthForm) {
-      this.router.navigate(['/login-form']);
-    }
-
-    if (isLoggedIn) {
-      this.authService.lastAuthenticatedPath = route.routeConfig?.path || defaultPath;
-    }
-
-    return isLoggedIn || isAuthForm;
-  }
-
 }
 
 

@@ -46,7 +46,7 @@ public class UsuarioDetalheImpl implements UserDetails {
 
     public static Set<Papel> getUsuarioPapel(List<GrantedAuthority> autorizacoes) {
         Set<Papel> papeis = autorizacoes.stream()
-                .map(papel -> new Papel(null, papel.getAuthority()))
+                .map(auth -> new Papel(null, auth.getAuthority()))
                 .collect(Collectors.toSet());
         return papeis;
     }
