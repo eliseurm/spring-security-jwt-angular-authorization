@@ -5,12 +5,11 @@ import {AuthService} from "./auth.service";
 @Injectable()
 export class AuthGuardService implements CanActivate {
 
-  constructor(private router: Router, private authService: AuthService) {
+  constructor(private router: Router,
+              private authService: AuthService) {
   }
 
   canActivate(route: ActivatedRouteSnapshot) {
-    // await this.authService.getUser();
-    AQUI: Olhar este exemplo
     //--> https://github.com/robisim74/AngularSPAWebAPI/blob/master/ClientApp/src/app/services/auth.guard.ts
     const isLoggedIn = this.authService.loggedIn;
     const isAuthForm = [

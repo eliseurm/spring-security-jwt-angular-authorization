@@ -4,6 +4,8 @@ import {IUser} from "../data/IUser";
 import {HttpClient} from "@angular/common/http";
 import {firstValueFrom} from "rxjs";
 import {IJwtResponse} from "../data/IJwtResponse";
+import {Usuario} from "../data/usuario";
+import {AppInfoService} from "./app-info.service";
 
 // const defaultUser = {
 //   token: '',
@@ -28,13 +30,19 @@ export class AuthService {
     return !!this._user;
   }
 
+  get user(){
+    return this._user;
+  }
+
   set lastAuthenticatedPath(value: string) {
     this._lastAuthenticatedPath = value;
   }
 
   constructor(private router: Router,
-              // private authService: AuthService,
+              private appInfoService: AppInfoService,
               private http: HttpClient) {
+
+    this._user = this.appInfoService.getStorageUser();
 
   }
 
@@ -48,12 +56,15 @@ export class AuthService {
       let data$ = this.http.post<IJwtResponse>(this._url+'/api/auth/login', data);
       let value = await firstValueFrom(data$);
 
+      let usuario: Usuario = await this.getUser();
+
       this._user = new class implements IUser {
-        avatarUrl: string = value.token;
-        email: string = value.usuario;
-        token: string = "https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png";
+        avatarUrl: string = "https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png";
+        email: string = usuario.email;
+        token: string = "";
       }
 
+      this.appInfoService.saveStorageUser(this._user);
       this.router.navigate([this._lastAuthenticatedPath]);
 
       return {
@@ -68,24 +79,9 @@ export class AuthService {
     }
   }
 
-  async getUser() {
-
-    try {
-      // Send request
-      // vai buscar o usuario que esta no cookie
-      let data$ = this.http.get<IUser>(this._url+'/api/usuario');
-      this._user = await firstValueFrom(data$);
-
-      return {
-        isOk: true,
-        data: this._user
-      };
-    } catch {
-      return {
-        isOk: false,
-        data: null
-      };
-    }
+  async getUser(): Promise<Usuario> {
+      let data$ = this.http.get<Usuario>(this._url+'/api/usuario');
+      return await firstValueFrom(data$);
   }
 
   async createAccount(name: string, email: string, password: string) {
@@ -144,9 +140,11 @@ export class AuthService {
   async logOut() {
 
     let data$ = this.http.post<any>(this._url+'/api/auth/logout', {});
-    let value = await firstValueFrom(data$);
+    await firstValueFrom(data$);
 
     this._user = null;
+    this.appInfoService.removeStorageUser();
+
     this.router.navigate(['/login-form']);
   }
 }

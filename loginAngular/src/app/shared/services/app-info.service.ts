@@ -1,4 +1,6 @@
 import { Injectable } from '@angular/core';
+import {IUser} from "../data/IUser";
+import * as CryptoJS from 'crypto-js';
 
 @Injectable()
 export class AppInfoService {
@@ -11,17 +13,52 @@ export class AppInfoService {
   public get currentYear() {
     return new Date().getFullYear();
   }
-// AQUI: guardar o ultimo usuario e senha logado
-  saveSessionUser(usuario: string, senha: string) {
-    sessionStorage.setItem("usuario", usuario);
-    sessionStorage.setItem("senha", senha);
+
+  // --- guardo o "user" logado
+  saveStorageUser(user: IUser) {
+    localStorage.setItem("user", JSON.stringify(user));
   }
 
-  getSessionStorage(name: string) {
-    return sessionStorage.getItem(name);
+  getStorageUser() {
+    let user: IUser | null = null;
+    let userStr: string | null = localStorage.getItem("user");
+
+    if (userStr) {
+      user = JSON.parse(userStr) as IUser;
+    }
+
+    return user;
   }
 
-  removeSessionStorage(name: string) {
-    sessionStorage.removeItem(name);
+  removeStorageUser() {
+    localStorage.removeItem("user");
   }
+
+  // --- Guardar usuario e senha
+  saveStorageUsuarioSenha(usuario: string, senha: string){
+    senha = CryptoJS.AES.encrypt(senha, 'keyEncriptUser').toString();
+    let storage = {
+      usuario: usuario,
+      senha: senha
+    }
+    localStorage.setItem("guardarUsuario", JSON.stringify(storage));
+  }
+
+  getStorageUsuarioSenha() {
+    let obj;
+    let str: string | null = localStorage.getItem("guardarUsuario");
+
+    if (str) {
+      obj = JSON.parse(str);
+      let bytes  = CryptoJS.AES.decrypt(obj.senha, 'keyEncriptUser');
+      obj.senha = bytes.toString(CryptoJS.enc.Utf8);
+    }
+
+    return obj;
+  }
+
+  removeStorageUsuarioSenha() {
+    localStorage.removeItem("guardarUsuario");
+  }
+
 }
