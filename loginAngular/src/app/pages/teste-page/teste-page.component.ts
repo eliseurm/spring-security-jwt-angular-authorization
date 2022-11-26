@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {IUser} from "../../shared/data/IUser";
+import {User} from "../../shared/data/user";
 import {AuthService} from "../../shared/services";
 
 @Component({
@@ -9,7 +9,7 @@ import {AuthService} from "../../shared/services";
 })
 export class TestePageComponent implements OnInit {
 
-  testes: IUser[] = [];
+  testes: User[] = [];
 
   constructor(private authService: AuthService) { }
 

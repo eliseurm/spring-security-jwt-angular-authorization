@@ -7,7 +7,7 @@ import { DxButtonModule } from 'devextreme-angular/ui/button';
 import { DxToolbarModule } from 'devextreme-angular/ui/toolbar';
 
 import { Router } from '@angular/router';
-import {IUser} from "../../data/IUser";
+import {User} from "../../data/user";
 @Component({
   selector: 'app-header',
   templateUrl: 'header.component.html',
@@ -24,11 +24,17 @@ export class HeaderComponent implements OnInit {
   @Input()
   title!: string;
 
-  user: IUser | null = new class implements IUser {
-    avatarUrl: string = "";
-    email: string = "";
-    token: string = "";
-  };
+  private _user!: User | null;
+
+  get user(){
+    if(!this._user){
+      this._user = new User("", []);
+    }
+    return this._user;
+  }
+  set user(value){
+    this._user = value;
+  }
 
   userMenuItems = [{
     text: 'Profile',
@@ -52,7 +58,7 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit() {
     if(this.authService.loggedIn){
-      this.user = this.authService.user;
+      this._user = this.authService.user;
     }
   }
 

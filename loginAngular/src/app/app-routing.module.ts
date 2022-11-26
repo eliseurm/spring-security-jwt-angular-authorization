@@ -12,12 +12,18 @@ const routes: Routes = [
   {
     path: 'tasks',
     component: TasksComponent,
-    canActivate: [ AuthGuardService ]
+    canActivate: [ AuthGuardService ],
+    data: {
+      role: 'ROLE_USER'
+    }
   },
   {
     path: 'profile',
     component: ProfileComponent,
-    canActivate: [ AuthGuardService ]
+    canActivate: [ AuthGuardService ],
+    data: {
+      role: 'ROLE_ADMIN'
+    }
   },
   {
     path: 'home',

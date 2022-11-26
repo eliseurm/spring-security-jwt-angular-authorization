@@ -1,5 +1,5 @@
 import {Injectable} from "@angular/core";
-import {ActivatedRouteSnapshot, CanActivate, Router} from "@angular/router";
+import {ActivatedRouteSnapshot, CanActivate, Router, RouterStateSnapshot} from "@angular/router";
 import {AuthService} from "./auth.service";
 
 @Injectable()
@@ -9,7 +9,7 @@ export class AuthGuardService implements CanActivate {
               private authService: AuthService) {
   }
 
-  canActivate(route: ActivatedRouteSnapshot) {
+  canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
     //--> https://github.com/robisim74/AngularSPAWebAPI/blob/master/ClientApp/src/app/services/auth.guard.ts
     const isLoggedIn = this.authService.loggedIn;
     const isAuthForm = [
@@ -17,9 +17,10 @@ export class AuthGuardService implements CanActivate {
       'reset-password',
       'create-account',
       'change-password/:recoveryCode'
-    ].includes(route.routeConfig?.path || this.authService.defaultPath);
+    ].includes(next.routeConfig?.path || this.authService.defaultPath);
+    const isRoleOk = this.checkRole(next);
 
-    if (isLoggedIn && isAuthForm) {
+    if (isLoggedIn && isAuthForm && isRoleOk) {
       this.authService.lastAuthenticatedPath = this.authService.defaultPath;
       this.router.navigate([this.authService.defaultPath]);
       return false;
@@ -30,11 +31,26 @@ export class AuthGuardService implements CanActivate {
     }
 
     if (isLoggedIn) {
-      this.authService.lastAuthenticatedPath = route.routeConfig?.path || this.authService.defaultPath;
+      this.authService.lastAuthenticatedPath = next.routeConfig?.path || this.authService.defaultPath;
     }
 
     return isLoggedIn || isAuthForm;
   }
 
+  checkRole(route: ActivatedRouteSnapshot): boolean {
+    // Quando o menu nao tiver role definido a rota fica livre
+    if(!route.data){
+      return true;
+    }
+
+    // comparo a rota do menu com as rotas do usuario
+    let role = route.data?.['role'];
+    let userRoles = this.authService.user?.roles;
+    if (role && userRoles && userRoles.indexOf(role) === -1) {
+      this.router.navigate([this.authService.defaultPath]);
+      return false;
+    }
+    return true;
+  }
 }
 

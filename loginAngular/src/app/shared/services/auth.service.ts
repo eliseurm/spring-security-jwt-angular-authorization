@@ -1,8 +1,8 @@
 import {Injectable, OnInit} from '@angular/core';
 import {Router} from '@angular/router';
-import {IUser} from "../data/IUser";
+import {User} from "../data/user";
 import {HttpClient} from "@angular/common/http";
-import {firstValueFrom} from "rxjs";
+import {firstValueFrom, observable} from "rxjs";
 import {IJwtResponse} from "../data/IJwtResponse";
 import {Usuario} from "../data/usuario";
 import {AppInfoService} from "./app-info.service";
@@ -16,7 +16,7 @@ import {AppInfoService} from "./app-info.service";
 @Injectable()
 export class AuthService {
 
-  private _user: IUser | null = null;
+  private _user: User | null = null;
   private _defaultPath = '/';
   private _lastAuthenticatedPath: string = this._defaultPath;
   private _url = "http://localhost:8080";
@@ -52,17 +52,22 @@ export class AuthService {
     let data = {nome: email, senha: password};
 
     try {
-      // Send request
-      let data$ = this.http.post<IJwtResponse>(this._url+'/api/auth/login', data);
-      let value = await firstValueFrom(data$);
+      /**
+       * Nesta requisicao a api checa usuario e senha e se estiverem corretos
+       * ele ja guarda no cookie o token jwt com as informacoes que liberam
+       * as proximas requisicoes
+       */
+      let observable$ = this.http.post<IJwtResponse>(this._url+'/api/auth/login', data);
+      let value = await firstValueFrom(observable$);
 
+      /**
+       * faz esta requisicao ja usando o cookie que o server gravou.
+       * se o token for valido, ele retorna informacoes sobre o
+       * usuario e seus papeis
+       */
       let usuario: Usuario = await this.getUser();
 
-      this._user = new class implements IUser {
-        avatarUrl: string = "https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png";
-        email: string = usuario.email;
-        token: string = "";
-      }
+      this._user = new User(usuario.email, usuario.papeis, "https://js.devexpress.com/Demos/WidgetsGallery/JSDemos/images/employees/06.png");
 
       this.appInfoService.saveStorageUser(this._user);
       this.router.navigate([this._lastAuthenticatedPath]);
@@ -80,8 +85,8 @@ export class AuthService {
   }
 
   async getUser(): Promise<Usuario> {
-      let data$ = this.http.get<Usuario>(this._url+'/api/usuario');
-      return await firstValueFrom(data$);
+      let observable$ = this.http.get<Usuario>(this._url+'/api/usuario');
+      return await firstValueFrom(observable$);
   }
 
   async createAccount(name: string, email: string, password: string) {
@@ -89,8 +94,8 @@ export class AuthService {
       // Send request
       console.log(email, password);
       let data = {nome: name, email: email, senha: password};
-      let data$ = this.http.post<IJwtResponse>('/api/auth/save', data);
-      let value = await firstValueFrom(data$);
+      let observable$ = this.http.post<IJwtResponse>('/api/auth/save', data);
+      let value = await firstValueFrom(observable$);
 
       this.router.navigate(['/create-account']);
       return {
@@ -118,7 +123,6 @@ export class AuthService {
         message: "Failed to change password"
       }
     }
-    ;
   }
 
   async resetPassword(email: string) {
@@ -139,8 +143,8 @@ export class AuthService {
 
   async logOut() {
 
-    let data$ = this.http.post<any>(this._url+'/api/auth/logout', {});
-    await firstValueFrom(data$);
+    let observable$ = this.http.post<any>(this._url+'/api/auth/logout', {});
+    await firstValueFrom(observable$);
 
     this._user = null;
     this.appInfoService.removeStorageUser();

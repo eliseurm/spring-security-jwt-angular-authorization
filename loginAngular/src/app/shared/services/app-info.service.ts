@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {IUser} from "../data/IUser";
+import {User} from "../data/user";
 import * as CryptoJS from 'crypto-js';
 
 @Injectable()
@@ -15,16 +15,16 @@ export class AppInfoService {
   }
 
   // --- guardo o "user" logado
-  saveStorageUser(user: IUser) {
+  saveStorageUser(user: User) {
     localStorage.setItem("user", JSON.stringify(user));
   }
 
   getStorageUser() {
-    let user: IUser | null = null;
+    let user: User | null = null;
     let userStr: string | null = localStorage.getItem("user");
 
     if (userStr) {
-      user = JSON.parse(userStr) as IUser;
+      user = JSON.parse(userStr) as User;
     }
 
     return user;
