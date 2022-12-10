@@ -4,6 +4,7 @@ import br.eng.eliseu.loginJwt.model.Usuario;
 import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,6 +26,18 @@ public class TestesController {
     @GetMapping("/listarTodos")
     public ResponseEntity<List<Usuario>> listarUsuarios(){
 
+        return ResponseEntity.ok(usuarioRepository.findAll());
+    }
+
+
+    /**
+     * Teste de seguranco no metodo
+     * @Secured({ "ROLE_ADMIN", "ROLE_USER" }) e @RolesAllowed({ "ROLE_VIEWER", "ROLE_EDITOR" }) sao equivalentes
+     * A anotação @Secured não suporta Spring Expression Language (SpEL).
+     */
+    @Secured({ "ROLE_ADMIN", "ROLE_USER" })
+    @GetMapping("/listarTodos2")
+    public ResponseEntity<List<Usuario>> listarUsuarios2(){
         return ResponseEntity.ok(usuarioRepository.findAll());
     }
 
