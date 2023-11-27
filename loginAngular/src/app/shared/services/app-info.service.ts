@@ -2,6 +2,11 @@ import { Injectable } from '@angular/core';
 import {User} from "../data/user";
 import * as CryptoJS from 'crypto-js';
 
+/**
+ * Esta classe é utilizada para armazenar, globalmente,
+ * informacoes sobre a aplicacao.
+ */
+
 @Injectable()
 export class AppInfoService {
   constructor() {}

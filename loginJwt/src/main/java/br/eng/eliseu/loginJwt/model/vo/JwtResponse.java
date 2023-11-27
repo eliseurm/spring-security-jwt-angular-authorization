@@ -5,7 +5,6 @@ import java.util.List;
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
-    private Integer id;
     private String usuario;
     private List<String> papeis;
 
@@ -27,14 +26,6 @@ public class JwtResponse {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
     }
 
     public String getUsuario() {

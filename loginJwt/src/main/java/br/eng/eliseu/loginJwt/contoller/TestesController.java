@@ -33,6 +33,8 @@ public class TestesController {
     /**
      * Teste de seguranco no metodo
      * @Secured({ "ROLE_ADMIN", "ROLE_USER" }) e @RolesAllowed({ "ROLE_VIEWER", "ROLE_EDITOR" }) sao equivalentes
+     * ainda temos @PreAuthorize("hasAuthority('ROLE_ADMIN')") e @PosAuthorize("hasAuthority('ROLE_ADMIN')")
+     * que sao chamadas antes e depois de entrar no metodos, respectivamente.
      * A anotação @Secured não suporta Spring Expression Language (SpEL).
      */
     @Secured({ "ROLE_ADMIN", "ROLE_USER" })

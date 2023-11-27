@@ -10,9 +10,8 @@ import br.eng.eliseu.loginJwt.model.vo.MessageResponse;
 import br.eng.eliseu.loginJwt.model.vo.SaveRequestVO;
 import br.eng.eliseu.loginJwt.repository.PapelRepository;
 import br.eng.eliseu.loginJwt.repository.UsuarioRepository;
-import br.eng.eliseu.loginJwt.security.impl.AuthEntryPointImpl;
-import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheImpl;
-import br.eng.eliseu.loginJwt.security.jwt.JwtUtil;
+import br.eng.eliseu.loginJwt.security.UsuarioDetailImpl;
+import br.eng.eliseu.loginJwt.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -58,13 +59,13 @@ public class AuthController {
      * Autentica um usuario
      */
     @PostMapping("/login")
-    public ResponseEntity<JwtResponse> autoriza(@RequestBody LoginRequestVO loginRequestVO) {
+    public ResponseEntity<JwtResponse> autoriza(@RequestBody LoginRequestVO loginRequestVO, HttpServletResponse response) {
 
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestVO.getNome(), loginRequestVO.getSenha()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        UsuarioDetalheImpl userDetails = (UsuarioDetalheImpl) authentication.getPrincipal();
+        UsuarioDetailImpl userDetails = (UsuarioDetailImpl) authentication.getPrincipal();
 
         // Gera token jwt a partir das informacoes do usuario autorizado
         // comentei porque no metodo que gera o cookie tbm gera o token com este mesmo metodo
@@ -78,17 +79,21 @@ public class AuthController {
         logger.info("Usuario: {}, papel: {}", userDetails.getUsername(), roles);
 
         // Monto o cookie que vai ser passado para o navegador
-        ResponseCookie jwtCookie = jwtUtil.generateJwtCookie(userDetails);
+//        ResponseCookie jwtCookie = jwtUtil.generateJwtResponseCookie(userDetails);
+
+        Cookie cookie = jwtUtil.generateJwtCookie(userDetails);
+
+        response.addCookie(cookie);
 
         // Carrego a classe que vai ser usada para retornar as informacoes do login
         JwtResponse res = new JwtResponse();
 //        res.setToken(jwtCookie.getValue());
-        res.setId(userDetails.getId());
+//        res.setId(userDetails.getId());
         res.setUsuario(userDetails.getUsername());
         res.setPapeis(roles);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+//                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
                 .body(res)
                 ;
 //        return ResponseEntity.ok(res);
@@ -137,16 +142,20 @@ public class AuthController {
     }
 
     @GetMapping("/validaSenha")
-    public ResponseEntity<Boolean> validaSenha(@RequestParam String nome, @RequestParam String senha){
-//        Optional<Usuario> optUsuario = usuarioRepository.findByNome(nome);
-        Optional<Usuario> optUsuario = Optional.of(new Usuario(null, "admin", "@email", "$2a$12$Yofga1.Zqg36R2oYjIWPOuIDY0r6xaL./2N2eAqv1iY1lR.tOC2La", new HashSet<String>(Arrays.asList("ROLE_ADMIN"))));
+    public ResponseEntity<Boolean> validaSenha(@RequestBody LoginRequestVO loginRequestVO){
+        Optional<Usuario> optUsuario = usuarioRepository.findByNome(loginRequestVO.getNome());
+//        Optional<Usuario> optUsuario = Optional.of(new Usuario(null, "admin", "@email", "$2a$12$Yofga1.Zqg36R2oYjIWPOuIDY0r6xaL./2N2eAqv1iY1lR.tOC2La", new HashSet<String>(Arrays.asList("ROLE_ADMIN"))));
 
         if(optUsuario.isEmpty()){
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(false);
         }
 
         Usuario usuario = optUsuario.get();
-        boolean valid = passwordEncoder.matches(senha, usuario.getSenha());
+        boolean valid = passwordEncoder.matches(usuario.getNome(), usuario.getSenha());
+
+        System.out.println("armazenado: " + usuario.getNome() + ":" + usuario.getSenha());
+        System.out.println("nova senha: 123456:" + passwordEncoder.encode("123456"));
+
 
         HttpStatus status = (valid) ? HttpStatus.OK : HttpStatus.UNAUTHORIZED;
         return ResponseEntity.status(status).body(valid);

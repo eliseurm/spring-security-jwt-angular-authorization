@@ -1,6 +1,5 @@
-package br.eng.eliseu.loginJwt.security.jwt;
+package br.eng.eliseu.loginJwt.security;
 
-import br.eng.eliseu.loginJwt.security.impl.UsuarioDetalheImpl;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ public class JwtUtil {
     @Value("${fullstackbook.app.jwtCookieName}")
     private String jwtCookieName;
 
-    public String generateJwtToken(UsuarioDetalheImpl userPrincipal) {
+    public String generateJwtToken(UsuarioDetailImpl userPrincipal) {
 
         String authorities = userPrincipal.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -45,14 +44,43 @@ public class JwtUtil {
 
     }
 
-    public ResponseCookie generateJwtCookie(UsuarioDetalheImpl userPrincipal) {
+    /**
+     * A classe ResponseCookie so spring é mais segura porque ja tem implementado recurso para 'SameSite Property'
+     * A SameSite sao propriedades de um cookie. É usada para restringir cookies de terceiros e, assim, reduzir os riscos de segurança.
+     * Opcoes do same: Strict, Lax, None
+     * Strict (restrito, nao permite ver o cookie), Lax(relachado, consegue ver algumas coisas do copkie), None(nenhum, ve todo o cookie)
+     */
+    public ResponseCookie generateJwtResponseCookie(UsuarioDetailImpl userPrincipal) {
         String jwt = generateJwtToken(userPrincipal);
         ResponseCookie cookie = ResponseCookie
                 .from(jwtCookieName, jwt)
-                .path("/api")
+                .path("/")
                 .maxAge(3600) // 1h
                 .secure(true)
                 .httpOnly(true)
+                .sameSite("Lax")
+                .build();
+        return cookie;
+    }
+
+
+    public Cookie generateJwtCookie(UsuarioDetailImpl userPrincipal) {
+        String jwt = generateJwtToken(userPrincipal);
+        Cookie cookie = new Cookie(jwtCookieName, jwt);
+//        cookie.setDomain("mensageiros.udi.br");
+        cookie.setPath("/");
+        cookie.setMaxAge(3600); // 1h
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        return cookie;
+    }
+
+    // o cokie de limpeza deve ter os mesmos parametros do cookie que sera apagado.
+    public ResponseCookie getCleanJwtCookie() {
+        ResponseCookie cookie = ResponseCookie
+                .from(jwtCookieName, null)
+                .path("/")
+                .maxAge(0)
                 .build();
         return cookie;
     }
@@ -89,14 +117,6 @@ public class JwtUtil {
         } else {
             return null;
         }
-    }
-
-    public ResponseCookie getCleanJwtCookie() {
-        ResponseCookie cookie = ResponseCookie
-                .from(jwtCookieName, null)
-                .path("/api")
-                .build();
-        return cookie;
     }
 
     public String getJwtCookieName() {

@@ -1,6 +1,5 @@
-package br.eng.eliseu.loginJwt.security.impl;
+package br.eng.eliseu.loginJwt.security.components;
 
-import br.eng.eliseu.loginJwt.security.jwt.CookieTokenFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.AuthenticationException;
@@ -21,9 +20,9 @@ import java.io.IOException;
  */
 
 @Component
-public class AuthEntryPointImpl implements AuthenticationEntryPoint {
+public class AuthenticationEntryManager implements AuthenticationEntryPoint {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthEntryPointImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationEntryManager.class);
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
